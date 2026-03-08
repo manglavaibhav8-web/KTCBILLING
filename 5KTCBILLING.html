@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Kishoriji Trading Company Billing</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f4f4;
+padding:20px;
+}
+
+.container{
+background:white;
+padding:25px;
+max-width:1000px;
+margin:auto;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+.header{
+text-align:center;
+border-bottom:2px solid black;
+padding-bottom:10px;
+margin-bottom:15px;
+}
+
+.header h1{
+margin:0;
+font-size:32px;
+}
+
+input,select{
+padding:6px;
+margin:5px;
+}
+
+button{
+padding:8px 15px;
+background:black;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:15px;
+}
+
+th{
+background:black;
+color:white;
+padding:10px;
+}
+
+td{
+border:1px solid #ccc;
+padding:10px;
+text-align:center;
+}
+
+.section{
+margin-top:20px;
+}
+
+.totals{
+text-align:right;
+font-size:20px;
+margin-top:20px;
+}
+
+@media print{
+
+body{
+background:white;
+}
+
+.no-print{
+display:none;
+}
+
+.container{
+box-shadow:none;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<h1>Kishoriji Trading Company</h1>
+<p>Invoice</p>
+
+</div>
+
+<div>
+
+Customer
+<input type="text" id="customer">
+
+Bill No
+<input type="text" id="billno" readonly>
+
+Date
+<input type="date" id="date">
+
+</div>
+
+<!-- INVENTORY -->
+
+<div class="section no-print">
+
+<h3>Add Product</h3>
+
+<input type="text" id="pname" placeholder="Product Name">
+<input type="number" id="pprice" placeholder="Price">
+
+<button onclick="addProduct()">Add Product</button>
+
+</div>
+
+<!-- BILLING -->
+
+<div class="section no-print">
+
+<h3>Add Item</h3>
+
+<select id="productList"></select>
+
+<input type="number" id="qty" placeholder="Qty">
+
+<button onclick="addItem()">Add Item</button>
+
+</div>
+
+<table id="billTable">
+
+<tr>
+<th>Product</th>
+<th>Price</th>
+<th>Qty</th>
+<th>Total</th>
+<th class="no-print">Remove</th>
+</tr>
+
+</table>
+
+<div class="totals">
+
+<h2 id="grandTotal">Grand Total: ₹0</h2>
+
+</div>
+
+<div class="no-print">
+
+<button onclick="printBill()">Print / Save PDF</button>
+<button onclick="clearBill()">Clear Bill</button>
+
+</div>
+
+</div>
+
+<script>
+
+let products=JSON.parse(localStorage.getItem("products"))||[]
+let total=0
+
+document.getElementById("billno").value=Math.floor(Math.random()*100000)
+
+let today=new Date().toISOString().split("T")[0]
+document.getElementById("date").value=today
+
+function loadProducts(){
+
+let select=document.getElementById("productList")
+
+select.innerHTML=""
+
+products.forEach((p,i)=>{
+
+let opt=document.createElement("option")
+
+opt.value=i
+opt.text=p.name+" - ₹"+p.price
+
+select.appendChild(opt)
+
+})
+
+}
+
+function addProduct(){
+
+let name=document.getElementById("pname").value
+let price=parseFloat(document.getElementById("pprice").value)
+
+products.push({name,price})
+
+localStorage.setItem("products",JSON.stringify(products))
+
+loadProducts()
+
+}
+
+function addItem(){
+
+let index=document.getElementById("productList").value
+
+let product=products[index]
+
+let qty=parseInt(document.getElementById("qty").value)
+
+let itemTotal=product.price*qty
+
+total+=itemTotal
+
+let table=document.getElementById("billTable")
+
+let row=table.insertRow()
+
+row.insertCell(0).innerHTML=product.name
+row.insertCell(1).innerHTML="₹"+product.price
+row.insertCell(2).innerHTML=qty
+row.insertCell(3).innerHTML="₹"+itemTotal
+
+let del=document.createElement("button")
+del.innerText="X"
+
+del.onclick=function(){
+
+total-=itemTotal
+table.deleteRow(row.rowIndex)
+updateTotal()
+
+}
+
+let cell=row.insertCell(4)
+cell.className="no-print"
+cell.appendChild(del)
+
+updateTotal()
+
+}
+
+function updateTotal(){
+
+document.getElementById("grandTotal").innerHTML="Grand Total: ₹"+total.toFixed(2)
+
+}
+
+function printBill(){
+
+window.print()
+
+}
+
+function clearBill(){
+
+location.reload()
+
+}
+
+loadProducts()
+
+</script>
+
+</body>
+</html>
